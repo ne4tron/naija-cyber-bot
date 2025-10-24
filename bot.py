@@ -1,11 +1,9 @@
 
-
 import os
 import re
 import requests
 import tldextract
 from flask import Flask, request
-from transformers import pipeline
 
 # === Telegram Config ===
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
@@ -13,16 +11,6 @@ BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
 # === Flask App ===
 app = Flask(__name__)
-
-# === ML Model (lightweight sentiment model) ===
-try:
-    classifier = pipeline(
-        "text-classification",
-        model="distilbert-base-uncased-finetuned-sst-2-english"
-    )
-except Exception as e:
-    classifier = None
-    print("⚠️ Could not load model:", e)
 
 # === Scam Keywords ===
 SCAM_KEYWORDS = [
@@ -32,12 +20,10 @@ SCAM_KEYWORDS = [
     "giveaway", "investment", "fund", "credit"
 ]
 
-
+# === Functions ===
 def detect_keywords(text):
     """Find scam-related keywords."""
-    found = [kw for kw in SCAM_KEYWORDS if re.search(rf"\b{kw}\b", text, re.IGNORECASE)]
-    return found
-
+    return [kw for kw in SCAM_KEYWORDS if re.search(rf"\b{kw}\b", text, re.IGNORECASE)]
 
 def check_domain_safety(text):
     """Extract domains and flag suspicious ones."""
@@ -53,44 +39,47 @@ def check_domain_safety(text):
     ]
     return {"domains": domains, "flagged": flagged}
 
-
-def ml_score(text):
-    """Use ML to get risk sentiment score."""
-    if not classifier:
-        return {"score": 0.5, "label": "neutral"}
-
-    result = classifier(text[:512])[0]
-    score = float(result["score"])
-    label = result["label"].lower()
-    risk = score if label == "negative" else 1 - score
-    return {"score": round(risk, 2), "label": label}
-
-
 def analyse_message(text):
-    """Combine keyword, domain, and ML checks."""
+    """Rule-based Mini-AI for scam detection (no ML)."""
     keywords = detect_keywords(text)
     domains = check_domain_safety(text)
-    ml_result = ml_score(text)
 
-    score = min(1.0, len(keywords) * 0.05 + ml_result["score"])
-    risk_level = "🟥 High" if score > 0.7 else "🟧 Medium" if score > 0.4 else "🟩 Low"
+    # --- Scoring weights ---
+    keyword_weight = 0.05       # each keyword adds 5%
+    flagged_domain_weight = 0.2 # each suspicious domain adds 20%
+    urgency_words = ["urgent", "immediately", "verify", "reset", "suspend"]
+    urgency_hits = sum(1 for w in urgency_words if re.search(rf"\b{w}\b", text, re.IGNORECASE))
+    urgency_weight = 0.05 * urgency_hits
 
+    # --- Total risk score ---
+    score = min(1.0, len(keywords) * keyword_weight +
+                       len(domains["flagged"]) * flagged_domain_weight +
+                       urgency_weight)
+
+    # --- Risk level ---
+    if score > 0.7:
+        risk_level = "🟥 High"
+    elif score > 0.4:
+        risk_level = "🟧 Medium"
+    else:
+        risk_level = "🟩 Low"
+
+    # --- Build response ---
     response = (
         f"🔍 *Scam Analysis Result:*\n\n"
         f"🧠 *Risk Level:* {risk_level}\n"
-        f"📊 *Score:* {round(score * 100, 1)}%\n\n"
+        f"📊 *Score:* {round(score*100, 1)}%\n\n"
     )
 
     if keywords:
-        response += f"🪤 *Keywords:* {', '.join(keywords)}\n"
+        response += f"🪤 *Keywords Detected:* {', '.join(keywords)}\n"
     if domains["domains"]:
         response += f"🌐 *Domains Found:* {', '.join(domains['domains'])}\n"
     if domains["flagged"]:
         response += f"🚨 *Suspicious Domains:* {', '.join(domains['flagged'])}\n"
 
-    response += f"\n🤖 ML Model Detected: {ml_result['label']} (confidence {ml_result['score']})"
+    response += "\n🤖 Model: Rule-Based Mini-AI"
     return response
-
 
 def send_message(chat_id, text):
     """Send message via Telegram API."""
@@ -98,11 +87,10 @@ def send_message(chat_id, text):
     data = {"chat_id": chat_id, "text": text, "parse_mode": "Markdown"}
     requests.post(url, json=data)
 
-
+# === Routes ===
 @app.route("/", methods=["GET"])
 def home():
     return "Bot is live!"
-
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
@@ -125,7 +113,6 @@ def webhook():
         send_message(chat_id, analysis)
 
     return "ok", 200
-
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
