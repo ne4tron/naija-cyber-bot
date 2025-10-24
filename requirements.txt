@@ -1,9 +1,9 @@
 flask
 requests
 tldextract
-python-dotenv
 transformers
-firebase-admin
+torch
+python-dotenv
 
 
 
