@@ -1,106 +1,144 @@
-# 🛡️ NaijaCyberGuardian Bot 🇳🇬
+# Naija CyberGuard Bot 🇳🇬
 
-**A free AI-powered Telegram bot that detects scams, phishing links, and fake messages targeting Nigerians.**
-
----
-
-## 🚀 Features
-✅ Detects common **phishing keywords** (e.g. “verify BVN”, “urgent OTP”, “reset password”)  
-✅ Flags **suspicious links** (like `bit.ly`, `tinyurl`, fake “free gift” pages)  
-✅ Provides instant **cyber-safety advice** for Nigerian users  
-✅ 100% free — runs on **Render + Telegram Bot API**  
-✅ Easy to extend with **Firebase** or **AI models** later  
+A free Telegram bot that analyses messages for scams in Nigeria.  
+It detects **scam keywords**, **suspicious domains**, and uses a **rule-based Mini-AI** to assign a **risk score** (Low / Medium / High).
 
 ---
 
-## 🧠 How It Works
-NaijaCyberGuardian uses simple natural-language heuristics to spot scam patterns and suspicious URLs commonly used in Nigerian online fraud.  
-It works **completely offline**, without storing any private user data.
+## ⚡ Features
+
+- Keyword-based scam detection  
+- Suspicious domain detection  
+- Rule-based Mini-AI risk scoring  
+- Risk levels and percentage score  
+- Works on **Render Free Tier** (no heavy ML required)  
+- 24/7 uptime once deployed  
 
 ---
 
-## ⚙️ Setup Instructions
+## 📥 Deployment
 
-### 1️⃣ Create a Telegram Bot
-1. Open **Telegram** → search for **@BotFather**
-2. Send `/newbot`
-3. Choose a name (e.g. `NaijaCyberGuardianBot`)
-4. Copy the **API Token** it gives you
+### 1️⃣ Clone the repository
+```bash
+git clone <your-repo-url>
+cd naija-cyberguard
+2️⃣ Install dependencies
+bash
+Copy code
+pip install -r requirements.txt
+3️⃣ Set up environment variables
+Create a .env file or use Render Environment Variables:
 
-### 2️⃣ Deploy on Render (Free Cloud)
-1. Go to [Render.com](https://render.com) → Sign in with GitHub  
-2. Click **New → Web Service**  
-3. Connect this GitHub repo  
-4. Set these options:
-   - **Environment:** Python  
-   - **Build Command:**  
-     ```
-     pip install -r requirements.txt
-     ```
-   - **Start Command:**  
-     ```
-     python bot.py
-     ```
-5. Add Environment Variable:
+ini
+Copy code
+BOT_TOKEN=<Your Telegram Bot Token>
+PORT=10000
+4️⃣ Deploy on Render
+Create a new Web Service → Python environment.
 
+Upload this repository or connect GitHub.
 
-Key: BOT_TOKEN
-Value: <your Telegram token>
+Add the environment variables above.
 
-6. Click **Deploy**
+Set Build Command:
 
-After a few minutes, your bot will be live 24/7 🚀  
+nginx
+Copy code
+pip install -r requirements.txt
+Set Start Command:
+
+nginx
+Copy code
+python bot.py
+Deploy.
+
+5️⃣ Set Telegram Webhook
+After deployment, run:
+
+bash
+Copy code
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=<YOUR_RENDER_URL>/webhook
+💬 Usage
+Start the bot:
+
+bash
+Copy code
+/start
+Send any message, text, or link. Examples:
+
+cpp
+Copy code
+You have won ₦50,000! Click https://bank-verify-secure.com to claim your reward immediately.
+Bot Response:
+
+yaml
+Copy code
+🔍 Scam Analysis Result:
+
+🧠 Risk Level: 🟥 High
+📊 Score: 87.0%
+
+🪤 Keywords Detected: reward, claim, bank, click
+🌐 Domains Found: bank-verify-secure.com
+🚨 Suspicious Domains: bank-verify-secure.com
+
+🤖 Model: Rule-Based Mini-AI
+Other examples:
+
+Normal message → Low risk
+
+Urgent scam text → High risk
+
+🔧 How it Works
+Keyword Detection: Checks for common scam-related words like BVN, OTP, verify, reward.
+
+Domain Analysis: Extracts URLs from the message and flags suspicious domains.
+
+Rule-Based Mini-AI: Calculates a risk score using weighted rules:
+
+Keywords → small weight
+
+Suspicious domains → higher weight
+
+Urgency words → extra weight
+
+Risk Level: Converts score to Low, Medium, or High for easy reading.
+
+📦 Files
+bot.py → Main bot logic
+
+requirements.txt → Python dependencies
+
+render.yaml → Render deployment configuration
+
+README.md → This file
+
+🛡 Notes
+Fully free to deploy on Render Free Tier.
+
+No heavy ML model loaded → avoids out-of-memory errors.
+
+Safe to push to GitHub — your BOT_TOKEN is stored in environment variables, not in the code.
+
+🔗 Links
+GitHub Repository: <your-repo-url>
+
+Render Deployment: <your-render-url>
+
+👏 Contribution
+Feel free to submit PRs for:
+
+New scam keyword updates
+
+Enhanced suspicious domain detection
+
+Rule improvements for Mini-AI scoring
+
+yaml
+Copy code
 
 ---
 
-## 💬 Usage
-1. Open your bot on Telegram  
-2. Send `/start`  
-3. Paste any SMS, link, or message you want to verify  
+If you want, I can **also package the entire bot** (`bot.py`, `requirements.txt`, `render.yaml`, and this README) **into a single ZIP** ready to upload to Render directly — no editing needed.  
 
-Example:
-
-
-Your BVN has been suspended, click bit.ly/bankverify
-
-
-Bot reply:
-
-
-🚨 Possible scam detected!
-⚠️ Keywords: bvn
-🔗 Links: bit.ly
-
-
----
-
-## 🧩 Folder Structure
-
-
-naija-cyber-bot/
-├── bot.py # Telegram bot logic
-├── requirements.txt # Python dependencies
-├── render.yaml # Render deployment configuration
-
-
----
-
-## 🧰 Future Upgrades
-- ✅ Screenshot / logo analysis (AI image detection)
-- ✅ Firebase scam report database
-- ✅ Dashboard for scam statistics by keyword or region
-- ✅ Integration with local authorities (EFCC / NITDA) reporting API
-
----
-
-## 👨‍💻 Built With
-- Python 🐍  
-- python-telegram-bot  
-- Render (Free Cloud Hosting)  
-- Telegram Bot API  
-
----
-
-## ❤️ Credits
-Developed as a free public-safety project to combat online scams in Nigeria.  
-**NaijaCyberGuardian** — *Protecting Nigerians, one message at a time.*
+Do you want me to do that next?
