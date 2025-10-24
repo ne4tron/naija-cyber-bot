@@ -1,39 +1,52 @@
+
 import os
-import re
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
+from flask import Flask
+import threading
 
-def detect_scam(text):
-    text = text.lower()
-    red_flags = [
-        "urgent", "verify your account", "reset password", "you have won",
-        "bank login", "bvn", "otp", "investment offer", "quick money"
-    ]
-    scam_links = ["bit.ly", "tinyurl", "wa.me", "freegift", "9jamoney", "airtimeoffer"]
-    
-    flags = [word for word in red_flags if word in text]
-    suspicious_links = [link for link in scam_links if link in text]
-    
-    if flags or suspicious_links:
-        return f"🚨 Possible scam detected!\n⚠️ Keywords: {', '.join(flags)}\n🔗 Links: {', '.join(suspicious_links)}"
-    return "✅ No obvious scam detected — but always stay alert."
+# --- Telegram Bot Logic ---
+
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("👋 Welcome to *NaijaCyberGuardian!* 🇳🇬\n\nSend me any message, link, or SMS to check if it might be a scam.\n\nI'll help you stay safe online 💪", parse_mode="Markdown")
+    await update.message.reply_text("👋 Welcome to NaijaCyberGuardian! Send me a message or link to check for scams.")
 
-async def scan_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_input = update.message.text
-    result = detect_scam(user_input)
-    await update.message.reply_text(result)
+async def check_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text.lower()
+    suspicious_keywords = ["bvn", "otp", "verify", "urgent", "account suspended", "bank", "password"]
+    suspicious_links = ["bit.ly", "tinyurl", "freegift", "promo"]
 
-if __name__ == "__main__":
-    TOKEN = os.getenv("BOT_TOKEN")
-    if not TOKEN:
-        raise ValueError("❌ BOT_TOKEN not found. Set it in environment variables.")
+    found_keywords = [word for word in suspicious_keywords if word in text]
+    found_links = [link for link in suspicious_links if link in text]
 
-    app = ApplicationBuilder().token(TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, scan_message))
+    if found_keywords or found_links:
+        response = "🚨 Possible scam detected!\n"
+        if found_keywords:
+            response += f"⚠️ Keywords: {', '.join(found_keywords)}\n"
+        if found_links:
+            response += f"🔗 Links: {', '.join(found_links)}\n"
+    else:
+        response = "✅ This message looks safe — but always stay cautious!"
 
-    print("🤖 NaijaCyberGuardian Bot is running...")
-    app.run_polling()
+    await update.message.reply_text(response)
+
+app_bot = ApplicationBuilder().token(BOT_TOKEN).build()
+app_bot.add_handler(CommandHandler("start", start))
+app_bot.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, check_message))
+
+# --- Keep Alive Web Server for Render ---
+app_web = Flask(__name__)
+
+@app_web.route('/')
+def home():
+    return "NaijaCyberGuardian is live and scanning scams 👮‍♂️"
+
+def run_flask():
+    app_web.run(host="0.0.0.0", port=10000)
+
+# --- Run both Flask and Bot together ---
+if __name__ == '__main__':
+    threading.Thread(target=run_flask).start()
+    app_bot.run_polling()
+
