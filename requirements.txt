@@ -3,7 +3,6 @@ requests
 tldextract
 python-dotenv
 transformers
-torch
 firebase-admin
 
 
