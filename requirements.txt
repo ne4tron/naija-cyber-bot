@@ -1,3 +1,8 @@
-python-telegram-bot==20.3
+requests
 flask
+python-dotenv
+transformers
+torch
+firebase-admin
+
 
