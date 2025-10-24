@@ -1,6 +1,7 @@
 services:
-  - type: worker
+  - type: web
     name: naija-cyber-bot
     env: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "python bot.py"
+    buildCommand: pip install -r requirements.txt
+    startCommand: python bot.py
+
